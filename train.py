@@ -60,6 +60,7 @@ def main():
     run.log("Penalty", args.penalty)
     run.log("Solver", args.solver)
 
+    y_pred, y_score = None
     try:
         model = LogisticRegression(
             C=args.C,
