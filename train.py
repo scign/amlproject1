@@ -60,7 +60,7 @@ def main():
     run.log("Penalty", args.penalty)
     run.log("Solver", args.solver)
 
-    y_pred, y_score = None
+    y_pred = None
     try:
         model = LogisticRegression(
             C=args.C,
@@ -70,12 +70,10 @@ def main():
         ).fit(x_train, y_train)
     except ValueError as e:
         # catch incompatible parameters e.g. lbfgs doesn't support l1 penalty
-        run.log("Error", str(e.with_traceback()))
-        y_pred = np.zeroes_like(y_test)
-        y_score = np.zeros_like(y_test, dtype=np.float)
+        run.log("Error", str(e))
+        y_pred = np.zeros_like(y_test)
     else:
         y_pred = model.predict(x_test)
-        y_score = model.predict_proba(x_test)
         # save the model
         os.makedirs('outputs', exist_ok=True)
         joblib.dump(model, os.path.join('outputs','model.joblib'))
@@ -90,8 +88,8 @@ def main():
             'precision_score_weighted'
         ]
         run.log("accuracy", accuracy_score(y_test, y_pred))
-        run.log("AUC_weighted", roc_auc_score(y_test, y_score, average='weighted'))
-        run.log("average_precision_score_weighted", average_precision_score(y_test, y_score, average='weighted'))
+        run.log("AUC_weighted", roc_auc_score(y_test, y_pred, average='weighted'))
+        run.log("average_precision_score_weighted", average_precision_score(y_test, y_pred, average='weighted'))
         run.log("norm_macro_recall", (recall_score(y_test, y_pred, average='macro')-0.5)/0.5)
         run.log("precision_score_weighted", precision_score(y_test, y_pred, average='weighted'))
 
