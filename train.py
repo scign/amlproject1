@@ -70,8 +70,8 @@ def main():
         ).fit(x_train, y_train)
     except ValueError as e:
         # catch incompatible parameters e.g. lbfgs doesn't support l1 penalty
-        run.log("Error", str(e))
         y_pred = np.zeros_like(y_test)
+        run.log("Error", str(e))
     else:
         y_pred = model.predict(x_test)
         # save the model
