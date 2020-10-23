@@ -25,7 +25,17 @@ Due to time constraints I needed an early stopping policy that would terminate l
 HyperDrive optimization revealed that althrough saga is a faster algorithm, lbfgs appeared to perform better, with l2 regularization (lbfgs does not support l1 regularization). Also a low value for C (i.e. strong regularization) produced better models.
 
 ## AutoML
-The SGD classifier in combination with the StandardScaler preprocessor performed exceptionally well, achieving normalized macro recall scores around the 70% mark in comparison to the 38% achieved by the HyperDrive-optimized LogisticRegression model.
+A stacked ensemble model was the best model identified by the AutoML run, achieving a normalized macro recall score of 0.76 in comparison to the 0.38 achieved by the HyperDrive-optimized LogisticRegression model. The ensemble model consisted of five [SGDClassifiers](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html), two [RandomForestClassifiers](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html) and one [LightGBMClassifier]() model.
+![Stacked model](stacked_model_learners.png)
+
+#### SGDClassifier hyperparameters
+It was interesting to note that none of the SGDClassifier models used the default `optimal` learning rate, instead opting for `constant` or `invscaling` and used a variety of `eta` (initial learning rate) values. The choice for `loss` makes sense as it is a logistic regression problem therefore `log` or `modified_huber` are more appropriate than the default `hinge` value. The `alpha` multiplier is much higher than I expected, since the default is 0.0001 which seems to suggest that stronger regularization yields a better model. That in itself may suggest that some re-evaluation of the dataset may be appropriate as the data may include collinear features that are resulting in a tendency to overfit. The `power_t` value is in line with the default value of 0.5 where used (only needed when `loss`=`invscaling`).
+
+#### RandomForestClassifier
+The approach taken with the RandomForestClassifiers was to have just a few trees, with `n_estimators` set to just 10 where the default is 100, and also with one using `n_features`=`sqrt` (i.e. sqrt(features) being the maximum number of features used in the tree) and the other using just 5% of the features. It appears that this may be a really good way to identify features that have a significant effect on the model and it may be interesting to review the feature importances of these models.
+
+#### LightGBMClassifier
+The LightGBMClassifier used all the default hyperparameters
 
 ## Pipeline comparison
 First and of significant impact is the preprocessor. The application of the scaling to all the features that had not been addressed by the cleaning script provided in the project template has a very large impact on the model's ability to learn from the feature space. Logistic regression models perform significantly better with inputs that are scaled to the same range and better when they have similar distributions.
